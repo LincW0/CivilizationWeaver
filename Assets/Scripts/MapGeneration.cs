@@ -8,9 +8,11 @@ public class MapGeneration : MonoBehaviour
     public Sprite[] sprites;
     public int mapHeight,mapWidth;
     private GameObject[,] tiles;
+    public int renderLayer;
     // Start is called before the first frame update
     void Start()
     {
+        tiles = new GameObject[mapWidth*2+1,mapHeight*2+1];
         GenerateMap();    
     }
 
@@ -20,9 +22,9 @@ public class MapGeneration : MonoBehaviour
         {
             for (int y = -mapHeight; y <= mapHeight; y++)
             {
-                GameObject tile = Instantiate(tilePrefab, new Vector3(x, y, 0), Quaternion.identity);
+                GameObject tile = Instantiate(tilePrefab, new Vector3(x, y, renderLayer), Quaternion.identity);
                 tile.GetComponent<SpriteRenderer>().sprite = sprites[0];
-                tiles[x,y]= tile;
+                tiles[x+mapWidth,y+mapHeight]=tile;
             }
         }
     }
