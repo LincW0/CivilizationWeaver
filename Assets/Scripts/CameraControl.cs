@@ -7,6 +7,7 @@ public class CameraControl : MonoBehaviour
     public float keyboardZoomSpeed,mouseZoomSpeed;
     public float originalSize;
     public float moveSpeed;
+    public float minimumSize;
     // Start is called before the first frame update
     void Start()
     {
@@ -24,9 +25,9 @@ public class CameraControl : MonoBehaviour
             }
             if (Input.GetKey(KeyCode.UpArrow))
             {
-                Camera.main.orthographicSize -= keyboardZoomSpeed * Time.deltaTime;
+                Camera.main.orthographicSize = Mathf.Max(minimumSize,Camera.main.orthographicSize - keyboardZoomSpeed * Time.deltaTime);
             }
-            Camera.main.orthographicSize -= Input.mouseScrollDelta.y * mouseZoomSpeed;
+            Camera.main.orthographicSize = Mathf.Max(minimumSize, Camera.main.orthographicSize - Input.mouseScrollDelta.y*mouseZoomSpeed);
         }
         if (Input.GetKey(KeyCode.W))
         {

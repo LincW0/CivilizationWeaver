@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Assets.Scripts;
 
 public class CursorControl : MonoBehaviour
 {
@@ -10,7 +11,7 @@ public class CursorControl : MonoBehaviour
 
     void Awake()
     {
-        cameraControl = GameObject.Find("Main Camera").GetComponent<CameraControl>();
+        cameraControl = Camera.main.GetComponent<CameraControl>();
     }
 
     // Start is called before the first frame update
@@ -22,18 +23,11 @@ public class CursorControl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //Debug.Log(Input.mousePosition);
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mousePosition.z = renderLayer;
-        gameObject.transform.position= mousePosition;
+        gameObject.transform.position = mousePosition;
         float scale = Camera.main.orthographicSize / cameraControl.originalSize * cursorSize;
         gameObject.transform.localScale = new Vector3(scale, scale, 0);
-        if (Input.GetMouseButtonDown(0))
-        {
-            Collider2D targetObject = Physics2D.OverlapPoint(mousePosition);
-            if (targetObject)
-            {
-                GameObject clickedOn = targetObject.transform.gameObject;
-            }
-        }
     }
 }
