@@ -1,13 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Assets.Scripts;
 
 public class ConstructionButtonScript : MonoBehaviour
 {
-    public int renderLayer;
-    public float buttonSize;
-    public Vector3 position;
-    private CameraControl cameraControl;
+    public float size { get; set; }
+    public Vector3 position { get; set; }
+    public CameraControl cameraControl { get; set; }
     void Awake()
     {
         cameraControl = Camera.main.GetComponent<CameraControl>();
@@ -20,11 +20,6 @@ public class ConstructionButtonScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float scale = Camera.main.orthographicSize / cameraControl.originalSize * buttonSize;
-        gameObject.transform.localScale = new Vector3(scale, scale, 0);
-        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(position);
-        worldPosition.z = renderLayer;
-        gameObject.transform.position = worldPosition;
-
+        //UserInterface.UpdatePosition(this);
     }
 }
