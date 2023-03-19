@@ -1,19 +1,22 @@
+using Assets.Scripts;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Assets.Scripts;
 
 public class GameControl : MonoBehaviour
 {
+    public GameObject CityIconPrefab;
     List<City> cities;
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
-        //cities = new List<City>();
-        //cities.Add(new City(gameObject));
-        //InvokeRepeating("AddTile", 1.5F, 1);
+        GameObject initialCity = Instantiate(CityIconPrefab, new Vector3(0, 0), Quaternion.identity);
+        cities = new List<City>
+        {
+            new BasicSettlement(initialCity)
+        };
+        initialCity.GetComponent<CityIconScript>().city = cities[0];
     }
-
     // Update is called once per frame
     void Update()
     {

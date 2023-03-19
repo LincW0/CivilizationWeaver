@@ -1,14 +1,15 @@
+using Assets.Scripts;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using Assets.Scripts;
 
 public class CityPanelControl : MonoBehaviour
 {
     private Button closeButton;
     private City tracking;
+    private TextMeshProUGUI nameDisplay, populationDisplay, healthDisplay, foodDisplay;
 
     // Start is called before the first frame update
     void Start()
@@ -17,13 +18,17 @@ public class CityPanelControl : MonoBehaviour
         closeButton = gameObject.transform.GetChild(0).GetComponent<Button>();
         closeButton.onClick.AddListener(Hide);
         tracking = null;
+        nameDisplay = gameObject.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+        populationDisplay = gameObject.transform.GetChild(2).GetComponent<TextMeshProUGUI>();
+        healthDisplay = gameObject.transform.GetChild(3).GetComponent<TextMeshProUGUI>();
+        foodDisplay = gameObject.transform.GetChild(4).GetComponent<TextMeshProUGUI>();
     }
 
     public void Show(City track)
     {
         gameObject.SetActive(true);
         tracking = track;
-        gameObject.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = tracking.name;
+        nameDisplay.text = tracking.Name;
     }
 
     public void Hide()
@@ -34,10 +39,11 @@ public class CityPanelControl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(tracking != null)
+        if (tracking != null)
         {
-            gameObject.transform.GetChild(2).GetComponent<TextMeshProUGUI>().text = "Population: " + tracking.population.ToString();
-            gameObject.transform.GetChild(3).GetComponent<TextMeshProUGUI>().text = "Helath: " + (tracking.health*100).ToString("0.00")+"%";
+            populationDisplay.text = "Population: " + tracking.Population.ToString();
+            healthDisplay.text = "Helath: " + (tracking.Health * 100).ToString("0.00") + "%";
+            foodDisplay.text = "Food: " + ((long)tracking.FoodQuantity).ToString() + " / " + ((long)tracking.FoodStorageCapacity).ToString();
         }
     }
 }

@@ -5,12 +5,12 @@ using Assets.Scripts;
 
 public class ConstructionButtonScript : MonoBehaviour
 {
-    public float size { get; set; }
-    public Vector3 position { get; set; }
-    public CameraControl cameraControl { get; set; }
+    public float Size { get; set; }
+    public Vector3 Position { get; set; }
+    public CameraControl CameraControl { get; set; }
     void Awake()
     {
-        cameraControl = Camera.main.GetComponent<CameraControl>();
+        CameraControl = Camera.main.GetComponent<CameraControl>();
     }
     // Start is called before the first frame update
     void Start()
