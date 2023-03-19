@@ -18,7 +18,7 @@ public class CursorControl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(Input.mousePosition);
+        //Debug.Log(Input.mousePosition);
         gameObject.transform.position = Input.mousePosition;
     }
 }
