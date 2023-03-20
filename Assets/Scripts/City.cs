@@ -9,8 +9,8 @@ namespace Assets.Scripts
     {
         public static readonly float idealLifeSpan = 80;
         public GameObject GameObject { get; protected set; }
-        private float baseHealth;
-        public float Health { get { return baseHealth * (FoodQuantity == 0 ? 0.002F : 1); } }
+        protected float baseHealth;
+        public float Health { get { return baseHealth * (NotEnoughFood ? 0.002F : 1); } }
         public float AverageLifeSpan { get { return Health * idealLifeSpan; } }
         public float AverageChildCount { get; protected set; }
         protected float populationContinuous;
@@ -18,30 +18,41 @@ namespace Assets.Scripts
         public string Name { get; set; }
         protected float deathCountContinuous;
         public long DeathCount => (long)deathCountContinuous;
-        public List<CityConponent> CityConponents { get; protected set; }
+        public List<CityComponent> CityComponents { get; protected set; }
         public float FoodStorageCapacity { get; protected set; }
         public float FoodQuantity { get; protected set; }
-        private GameTime timePanel;
-        public City(GameObject gameObject, string name)
+        public readonly GameTime TimePanel;
+        public readonly float TotalSpace;
+        public float SpaceTaken { get; protected set; }
+        public bool NotEnoughFood { get; protected set; }
+        public City(GameObject gameObject, string name, float totalSpace)
         {
             GameObject = gameObject;
-            AverageChildCount = 10;
-            populationContinuous = 1000;
             deathCountContinuous = 0;
-            baseHealth = 0.25F;
             Name = name;
-            CityConponents = new List<CityConponent>();
-            timePanel = GameObject.Find("TimePanel").GetComponent<GameTime>();
+            CityComponents = new List<CityComponent>();
+            TimePanel = GameObject.Find("TimePanel").GetComponent<GameTime>();
+            TotalSpace = totalSpace;
+            NotEnoughFood = false;
         }
         protected void UpdateFoodStorage()
         {
             FoodStorageCapacity = 0;
-            foreach (CityConponent cityConponent in CityConponents)
+            foreach (CityComponent cityConponent in CityComponents)
             {
                 if (cityConponent is FoodStorage foodStorage)
                 {
                     FoodStorageCapacity += foodStorage.Capacity;
                 }
+            }
+        }
+
+        protected void UpdateSpaceTaken()
+        {
+            SpaceTaken = 0;
+            foreach (CityComponent cityConponent in CityComponents)
+            {
+                SpaceTaken += cityConponent.Space;
             }
         }
 
@@ -53,9 +64,9 @@ namespace Assets.Scripts
                 //TODO: notify player.
             }
             FoodQuantity += quantity;
-            foreach (CityConponent cityConponent in CityConponents)
+            foreach (CityComponent cityComponent in CityComponents)
             {
-                if (cityConponent is FoodStorage foodStorage)
+                if (cityComponent is FoodStorage foodStorage)
                 {
                     float storing = Mathf.Min(foodStorage.Capacity - foodStorage.StoredQuantity, quantity);
                     foodStorage.StoredQuantity += storing;
@@ -72,9 +83,9 @@ namespace Assets.Scripts
                 throw new ArgumentOutOfRangeException("Not enough food: " + FoodQuantity.ToString() + " - " + quantity.ToString() + " = Not enough.");
             }
             FoodQuantity -= quantity;
-            foreach (CityConponent cityConponent in CityConponents)
+            foreach (CityComponent cityComponent in CityComponents)
             {
-                if (cityConponent is FoodStorage foodStorage)
+                if (cityComponent is FoodStorage foodStorage)
                 {
                     float consuming = Mathf.Min(foodStorage.StoredQuantity, quantity);
                     foodStorage.StoredQuantity -= consuming;
@@ -86,35 +97,56 @@ namespace Assets.Scripts
 
         public void Update()
         {
-            populationContinuous += Population * AverageChildCount * (UnityEngine.Random.value + 0.5F) * Time.deltaTime / timePanel.DayToSecond / 365 / idealLifeSpan;
-            float deathInFrame = Population * (UnityEngine.Random.value + 0.5F) * Time.deltaTime / timePanel.DayToSecond / 365 / AverageLifeSpan;
+            populationContinuous += Population * AverageChildCount * (UnityEngine.Random.value + 0.5F) * Time.deltaTime / TimePanel.DayToSecond / 365 / idealLifeSpan;
+            float deathInFrame = Population * (UnityEngine.Random.value + 0.5F) * Time.deltaTime / TimePanel.DayToSecond / 365 / AverageLifeSpan;
             populationContinuous -= deathInFrame;
             deathCountContinuous += deathInFrame;
-            ConsumeFood(Mathf.Min(FoodQuantity, Population * Time.deltaTime));
-            Debug.Log(Population);
-            Debug.Log(DeathCount);
+            if (FoodQuantity <= Population * Time.deltaTime / TimePanel.DayToSecond)
+            {
+                NotEnoughFood = true;
+            }
+            else
+            {
+                NotEnoughFood = false;
+            }
+            ConsumeFood(Mathf.Min(FoodQuantity, Population * Time.deltaTime / TimePanel.DayToSecond));
+            foreach (CityComponent cityComponent in CityComponents)
+            {
+                cityComponent.Update();
+            }
+            //Debug.Log(Population);
+            //Debug.Log(DeathCount);
         }
     }
     public class BasicSettlement : City
     {
-        public BasicSettlement(GameObject gameObject) : base(gameObject, "Basic Settlement")
+        public BasicSettlement(GameObject gameObject) : base(gameObject, "Basic Settlement", 3)
         {
-            CityConponents.Add(new FoodPile(this));
+            AverageChildCount = 10;
+            populationContinuous = 100;
+            baseHealth = 0.25F;
+            CityComponents.Add(new FoodPile(this));
             UpdateFoodStorage();
             AddFood(10000);
+            CityComponents.Add(new GatheringArea(this));
+            UpdateSpaceTaken();
         }
     }
-    public class CityConponent
+    public class CityComponent
     {
         protected City city;
         virtual public string Name { get; protected set; }
         virtual public float Space { get; protected set; }
-        public CityConponent(City city)
+        virtual public void Update()
+        {
+
+        }
+        public CityComponent(City city)
         {
             this.city = city;
         }
     }
-    public class FoodStorage : CityConponent
+    public class FoodStorage : CityComponent
     {
         virtual public float Capacity { get; protected set; }
         virtual public float StoredQuantity { get; set; }
@@ -129,6 +161,27 @@ namespace Assets.Scripts
         {
             Name = "Food Pile";
             Capacity = 10000;
+            Space = 1;
+        }
+    }
+    public class FoodProduction : CityComponent
+    {
+        public readonly float BaseProduction;
+        virtual public float Production { get { return BaseProduction; } }
+        public FoodProduction(City city, float baseProduction) : base(city)
+        {
+            BaseProduction = baseProduction;
+        }
+        public override void Update()
+        {
+            city.AddFood(Production * Time.deltaTime / city.TimePanel.DayToSecond);
+        }
+    }
+    public class GatheringArea : FoodProduction
+    {
+        public GatheringArea(City city) : base(city, 50)
+        {
+            Name = "Gathering Area";
             Space = 1;
         }
     }
