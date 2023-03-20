@@ -5,6 +5,10 @@
 
  Currently you can use it as a very inacurrate population simulator.
 
+## Preview
+
+ ![The screenshot didn't load correctly.](https://hydro.ac/d/LwOJ/p/2/file/hizt3Jfgr4RIzJhVxYrT_.png)
+
 ## Structure
 
  A structure is something that you can build on the map.
