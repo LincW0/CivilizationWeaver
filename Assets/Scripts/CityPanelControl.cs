@@ -57,10 +57,10 @@ public class CityPanelControl : MonoBehaviour
     {
         if (tracking != null)
         {
-            populationDisplay.text = "Population: " + tracking.Population.ToString();
+            populationDisplay.text = "Population: " + NumberDisplay.UnitAbbreviation(tracking.Population) + " / " + NumberDisplay.UnitAbbreviation(tracking.PopulationCapacity);
             healthDisplay.text = "Helath: " + (tracking.Health * 100).ToString("0.00") + "%";
-            foodDisplay.text = "Food: " + ((long)tracking.FoodQuantity).ToString() + " / " + ((long)tracking.FoodStorageCapacity).ToString();
-            spaceDisplay.text = "Space: " + (tracking.SpaceTaken).ToString("0.00") + " / " + (tracking.TotalSpace).ToString("0.00");
+            foodDisplay.text = "Food: " + NumberDisplay.UnitAbbreviation(tracking.FoodQuantity) + " / " + NumberDisplay.UnitAbbreviation(tracking.FoodStorageCapacity);
+            spaceDisplay.text = "Space: " + NumberDisplay.UnitAbbreviation(tracking.SpaceTaken) + " / " + NumberDisplay.UnitAbbreviation(tracking.TotalSpace);
             for (int i = page * 3; i < page * 3 + 3; ++i)
             {
                 if (i >= tracking.CityComponents.Count)
@@ -69,7 +69,16 @@ public class CityPanelControl : MonoBehaviour
                 }
                 else
                 {
-                    componentDisplays[i].text = tracking.CityComponents[i].Name + " (" + tracking.CityComponents[i].Space.ToString("0.00") + " Space)";
+                    componentDisplays[i].text = tracking.CityComponents[i].Name + " (" + NumberDisplay.UnitAbbreviation(tracking.CityComponents[i].WorkerCount)
+                        + " / " + NumberDisplay.UnitAbbreviation(tracking.CityComponents[i].RequiredWorker) + " Worker)";
+                    if (tracking.CityComponents[i].RequiredWorker > tracking.CityComponents[i].WorkerCount)
+                    {
+                        componentDisplays[i].color = Color.red;
+                    }
+                    else
+                    {
+                        componentDisplays[i].color = Color.white;
+                    }
                 }
             }
             if (tracking.NotEnoughFood)
@@ -87,12 +96,12 @@ public class CityPanelControl : MonoBehaviour
             if (tracking.IdlePopulation > 0)
             {
                 populationDisplay.color = Color.yellow;
-                populationDisplay.text += " (" + tracking.IdlePopulation.ToString() + " idle)";
+                populationDisplay.text += " (" + NumberDisplay.UnitAbbreviation(tracking.IdlePopulation) + " idle)";
             }
             if (tracking.NotEnoughWorkers)
             {
                 populationDisplay.color = Color.red;
-                populationDisplay.text += " (" + (tracking.RequiredWorker - tracking.Population).ToString() + " short)";
+                populationDisplay.text += " (" + NumberDisplay.UnitAbbreviation(tracking.RequiredWorker - tracking.Population) + " short)";
             }
         }
     }

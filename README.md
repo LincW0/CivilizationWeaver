@@ -32,5 +32,3 @@
  Plot of land in city where you do specific things.
 
  Such as farms, houses, factories, etc.
-
- Note that none of the above is actually implemented.
