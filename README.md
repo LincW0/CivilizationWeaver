@@ -7,7 +7,7 @@
 
 ## Preview
 
- ![The screenshot didn't load correctly.](https://hydro.ac/d/LwOJ/p/2/file/hizt3Jfgr4RIzJhVxYrT_.png)
+ ![The screenshot didn't load correctly.](/ReadmeResources/Preview.png)
 
 ## Structure
 
