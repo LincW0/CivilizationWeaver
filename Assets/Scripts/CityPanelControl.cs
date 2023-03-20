@@ -84,6 +84,16 @@ public class CityPanelControl : MonoBehaviour
             {
                 foodDisplay.color = Color.white;
             }
+            if (tracking.IdlePopulation > 0)
+            {
+                populationDisplay.color = Color.yellow;
+                populationDisplay.text += " (" + tracking.IdlePopulation.ToString() + " idle)";
+            }
+            if (tracking.NotEnoughWorkers)
+            {
+                populationDisplay.color = Color.red;
+                populationDisplay.text += " (" + (tracking.RequiredWorker - tracking.Population).ToString() + " short)";
+            }
         }
     }
 }

@@ -25,6 +25,9 @@ namespace Assets.Scripts
         public readonly float TotalSpace;
         public float SpaceTaken { get; protected set; }
         public bool NotEnoughFood { get; protected set; }
+        public bool NotEnoughWorkers { get; protected set; }
+        public long IdlePopulation { get; protected set; }
+        public long RequiredWorker { get; protected set; }
         public City(GameObject gameObject, string name, float totalSpace)
         {
             GameObject = gameObject;
@@ -95,6 +98,30 @@ namespace Assets.Scripts
             }
         }
 
+        protected void ReassignJobs()
+        {
+            bool notEnoughWorkers = false;
+            IdlePopulation = Population;
+            RequiredWorker = 0;
+            foreach (CityComponent cityComponent in CityComponents)
+            {
+                RequiredWorker += cityComponent.RequiredWorker;
+                if (cityComponent.RequiredWorker > IdlePopulation)
+                {
+                    cityComponent.WorkerCount = IdlePopulation;
+                    NotEnoughWorkers = true;
+                    notEnoughWorkers = true;
+                    IdlePopulation = 0;
+                }
+                else
+                {
+                    cityComponent.WorkerCount = cityComponent.RequiredWorker;
+                    IdlePopulation -= cityComponent.RequiredWorker;
+                    if (!notEnoughWorkers) NotEnoughWorkers = false;
+                }
+            }
+        }
+
         public void Update()
         {
             populationContinuous += Population * AverageChildCount * (UnityEngine.Random.value + 0.5F) * Time.deltaTime / TimePanel.DayToSecond / 365 / idealLifeSpan;
@@ -114,6 +141,7 @@ namespace Assets.Scripts
             {
                 cityComponent.Update();
             }
+            ReassignJobs();
             //Debug.Log(Population);
             //Debug.Log(DeathCount);
         }
@@ -137,6 +165,8 @@ namespace Assets.Scripts
         protected City city;
         virtual public string Name { get; protected set; }
         virtual public float Space { get; protected set; }
+        virtual public long RequiredWorker { get; protected set; }
+        public long WorkerCount;
         virtual public void Update()
         {
 
@@ -144,6 +174,7 @@ namespace Assets.Scripts
         public CityComponent(City city)
         {
             this.city = city;
+            WorkerCount = 0;
         }
     }
     public class FoodStorage : CityComponent
@@ -162,6 +193,7 @@ namespace Assets.Scripts
             Name = "Food Pile";
             Capacity = 10000;
             Space = 1;
+            RequiredWorker = 10;
         }
     }
     public class FoodProduction : CityComponent
@@ -179,10 +211,18 @@ namespace Assets.Scripts
     }
     public class GatheringArea : FoodProduction
     {
-        public GatheringArea(City city) : base(city, 50)
+        public override float Production
+        {
+            get
+            {
+                return base.Production * ((float)WorkerCount / RequiredWorker);
+            }
+        }
+        public GatheringArea(City city) : base(city, 60)
         {
             Name = "Gathering Area";
             Space = 1;
+            RequiredWorker = 40;
         }
     }
 }
