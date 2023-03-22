@@ -147,6 +147,13 @@ namespace Assets.Scripts
             }
         }
 
+        public void Swap(int index1,int index2)
+        {
+            CityComponent temporary = CityComponents[index1];
+            CityComponents[index1] = CityComponents[index2];
+            CityComponents[index2] = temporary;
+        }
+
         public void Update()
         {
             ReassignJobs();

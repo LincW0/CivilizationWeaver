@@ -12,9 +12,8 @@ public class CityPanelControl : MonoBehaviour
     private TextMeshProUGUI nameDisplay, populationDisplay, healthDisplay, foodDisplay, spaceDisplay;
     private Button[] componentButtons;
     private TextMeshProUGUI[] componentDisplays;
-    private Transform overallStatusTransform, componentDisplayTransform;
+    private Transform overallStatusTransform, componentDisplayTransform,upDownButtonsTransform,pageSwitcherTransform;
     private int page;
-
     // Start is called before the first frame update
     void Start()
     {
@@ -31,11 +30,17 @@ public class CityPanelControl : MonoBehaviour
         componentDisplayTransform = gameObject.transform.GetChild(3);
         componentButtons = new Button[3];
         componentDisplays = new TextMeshProUGUI[3];
+        upDownButtonsTransform = componentDisplayTransform.GetChild(3);
+        pageSwitcherTransform = componentDisplayTransform.GetChild(4);
         for (int i = 0; i < 3; ++i)
         {
             Transform buttonTranform = componentDisplayTransform.GetChild(i);
             componentButtons[i] = buttonTranform.GetComponent<Button>();
             componentDisplays[i] = buttonTranform.GetChild(0).GetComponent<TextMeshProUGUI>();
+            Transform upDownButtons = upDownButtonsTransform.GetChild(i);
+            int index = i;
+            upDownButtons.GetChild(0).GetComponent<Button>().onClick.AddListener(()=>SwapUp(index));
+            upDownButtons.GetChild(1).GetComponent<Button>().onClick.AddListener(()=>SwapDown(index));
         }
     }
 
@@ -50,6 +55,24 @@ public class CityPanelControl : MonoBehaviour
     public void Hide()
     {
         gameObject.SetActive(false);
+    }
+
+    public void SwapUp(int currentPosition)
+    {
+        int actualPosition = page*3+currentPosition;
+        if(actualPosition!=0)
+        {
+            tracking.Swap(actualPosition-1,actualPosition);
+        }
+    }
+
+    public void SwapDown(int currentPosition)
+    {
+        int actualPosition = page*3+currentPosition;
+        if(actualPosition<tracking.CityComponents.Count-1)
+        {
+            tracking.Swap(actualPosition,actualPosition+1);
+        }
     }
 
     // Update is called once per frame
