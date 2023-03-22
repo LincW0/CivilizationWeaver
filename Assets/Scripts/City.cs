@@ -31,7 +31,9 @@ namespace Assets.Scripts
         public long DeathCount => (long)deathCountContinuous;
         public List<CityComponent> CityComponents { get; protected set; }
         public float FoodStorageCapacity { get; protected set; }
+        public float WoodStorageCapacity { get; protected set; }
         public float FoodQuantity { get; protected set; }
+        public float WoodQuantity { get; protected set; }
         public readonly GameTime TimePanel;
         public readonly float TotalSpace;
         public float SpaceTaken { get; protected set; }
@@ -40,6 +42,7 @@ namespace Assets.Scripts
         public long IdlePopulation { get; protected set; }
         public long RequiredWorker { get; protected set; }
         public long PopulationCapacity { get; protected set; }
+        public float Wood { get; protected set; }
         public City(GameObject gameObject, string name, float totalSpace)
         {
             GameObject = gameObject;
@@ -122,6 +125,56 @@ namespace Assets.Scripts
                 }
             }
         }
+        protected void UpdateWoodStorage()
+        {
+            WoodStorageCapacity = 0;
+            foreach (CityComponent cityConponent in CityComponents)
+            {
+                if (cityConponent is WoodStorage woodStorage)
+                {
+                    WoodStorageCapacity += woodStorage.Capacity;
+                }
+            }
+        }
+
+        public void AddWood(float quantity)
+        {
+            if (quantity > WoodStorageCapacity - WoodQuantity)
+            {
+                quantity = WoodStorageCapacity - WoodQuantity;
+                //TODO: notify player.
+            }
+            WoodQuantity += quantity;
+            foreach (CityComponent cityComponent in CityComponents)
+            {
+                if (cityComponent is WoodStorage woodStorage)
+                {
+                    float storing = Mathf.Min(woodStorage.Capacity - woodStorage.StoredQuantity, quantity);
+                    woodStorage.StoredQuantity += storing;
+                    if (storing == quantity) break;
+                    quantity -= storing;
+                }
+            }
+        }
+
+        public void ConsumeWood(float quantity)
+        {
+            if (quantity > WoodQuantity)
+            {
+                throw new ArgumentOutOfRangeException("Not enough wood: " + WoodQuantity.ToString() + " - " + quantity.ToString() + " = Not enough.");
+            }
+            WoodQuantity -= quantity;
+            foreach (CityComponent cityComponent in CityComponents)
+            {
+                if (cityComponent is WoodStorage woodStorage)
+                {
+                    float consuming = Mathf.Min(woodStorage.StoredQuantity, quantity);
+                    woodStorage.StoredQuantity -= consuming;
+                    if (consuming == quantity) break;
+                    quantity -= consuming;
+                }
+            }
+        }
 
         protected void ReassignJobs()
         {
@@ -147,7 +200,7 @@ namespace Assets.Scripts
             }
         }
 
-        public void Swap(int index1,int index2)
+        public void Swap(int index1, int index2)
         {
             CityComponent temporary = CityComponents[index1];
             CityComponents[index1] = CityComponents[index2];
@@ -183,8 +236,9 @@ namespace Assets.Scripts
     }
     public class BasicSettlement : City
     {
-        public BasicSettlement(GameObject gameObject) : base(gameObject, "Basic Settlement", 3)
+        public BasicSettlement(GameObject gameObject) : base(gameObject, "Basic Settlement", 6)
         {
+            FoodQuantity = 0;
             AverageChildCount = 10;
             populationContinuous = 100;
             CityComponents.Add(new FoodPile(this));
@@ -193,6 +247,9 @@ namespace Assets.Scripts
             CityComponents.Add(new Tents(this));
             UpdatePopulationCapacity();
             CityComponents.Add(new GatheringArea(this));
+            CityComponents.Add(new WoodPile(this));
+            UpdateWoodStorage();
+            CityComponents.Add(new StickPickupArea(this));
             UpdateSpaceTaken();
         }
     }
@@ -285,6 +342,58 @@ namespace Assets.Scripts
             Space = 1;
             RequiredWorker = 8;
             capacity = 200;
+        }
+    }
+    public class WoodStorage : CityComponent
+    {
+        virtual public float Capacity { get; protected set; }
+        virtual public float StoredQuantity { get; set; }
+        public WoodStorage(City city) : base(city)
+        {
+            StoredQuantity = 0;
+        }
+    }
+    public class WoodPile : WoodStorage
+    {
+        public WoodPile(City city) : base(city)
+        {
+            Name = "Wood Pile";
+            Capacity = 10000;
+            Space = 1;
+            RequiredWorker = 1;
+        }
+        public override void Update()
+        {
+            city.ConsumeWood(StoredQuantity * (1 - (float)WorkerCount / RequiredWorker));
+        }
+    }
+    public class WoodProduction : CityComponent
+    {
+        public readonly float BaseProduction;
+        virtual public float Production { get { return BaseProduction; } }
+        public WoodProduction(City city, float baseProduction) : base(city)
+        {
+            BaseProduction = baseProduction;
+        }
+        public override void Update()
+        {
+            city.AddWood(Production * Time.deltaTime / city.TimePanel.DayToSecond);
+        }
+    }
+    public class StickPickupArea : WoodProduction
+    {
+        public override float Production
+        {
+            get
+            {
+                return base.Production * ((float)WorkerCount / RequiredWorker);
+            }
+        }
+        public StickPickupArea(City city) : base(city, 5)
+        {
+            Name = "Stick Pickup Area";
+            Space = 1;
+            RequiredWorker = 5;
         }
     }
 }

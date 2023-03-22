@@ -9,10 +9,10 @@ public class CityPanelControl : MonoBehaviour
 {
     private Button closeButton;
     private City tracking;
-    private TextMeshProUGUI nameDisplay, populationDisplay, healthDisplay, foodDisplay, spaceDisplay;
+    private TextMeshProUGUI nameDisplay, populationDisplay, healthDisplay, foodDisplay, spaceDisplay, woodDisplay;
     private Button[] componentButtons;
     private TextMeshProUGUI[] componentDisplays;
-    private Transform overallStatusTransform, componentDisplayTransform,upDownButtonsTransform,pageSwitcherTransform;
+    private Transform overallStatusTransform, componentDisplayTransform, upDownButtonsTransform, pageSwitcherTransform;
     private int page;
     // Start is called before the first frame update
     void Start()
@@ -27,6 +27,7 @@ public class CityPanelControl : MonoBehaviour
         healthDisplay = overallStatusTransform.GetChild(1).GetComponent<TextMeshProUGUI>();
         foodDisplay = overallStatusTransform.GetChild(2).GetComponent<TextMeshProUGUI>();
         spaceDisplay = overallStatusTransform.GetChild(3).GetComponent<TextMeshProUGUI>();
+        woodDisplay = overallStatusTransform.GetChild(4).GetComponent<TextMeshProUGUI>();
         componentDisplayTransform = gameObject.transform.GetChild(3);
         componentButtons = new Button[3];
         componentDisplays = new TextMeshProUGUI[3];
@@ -39,9 +40,11 @@ public class CityPanelControl : MonoBehaviour
             componentDisplays[i] = buttonTranform.GetChild(0).GetComponent<TextMeshProUGUI>();
             Transform upDownButtons = upDownButtonsTransform.GetChild(i);
             int index = i;
-            upDownButtons.GetChild(0).GetComponent<Button>().onClick.AddListener(()=>SwapUp(index));
-            upDownButtons.GetChild(1).GetComponent<Button>().onClick.AddListener(()=>SwapDown(index));
+            upDownButtons.GetChild(0).GetComponent<Button>().onClick.AddListener(() => SwapUp(index));
+            upDownButtons.GetChild(1).GetComponent<Button>().onClick.AddListener(() => SwapDown(index));
         }
+        pageSwitcherTransform.GetChild(0).GetComponent<Button>().onClick.AddListener(PreviousPage);
+        pageSwitcherTransform.GetChild(1).GetComponent<Button>().onClick.AddListener(NextPage);
     }
 
     public void Show(City track)
@@ -59,20 +62,31 @@ public class CityPanelControl : MonoBehaviour
 
     public void SwapUp(int currentPosition)
     {
-        int actualPosition = page*3+currentPosition;
-        if(actualPosition!=0)
+        int actualPosition = page * 3 + currentPosition;
+        if (actualPosition >= tracking.CityComponents.Count) return;
+        if (actualPosition != 0)
         {
-            tracking.Swap(actualPosition-1,actualPosition);
+            tracking.Swap(actualPosition - 1, actualPosition);
         }
     }
 
     public void SwapDown(int currentPosition)
     {
-        int actualPosition = page*3+currentPosition;
-        if(actualPosition<tracking.CityComponents.Count-1)
+        int actualPosition = page * 3 + currentPosition;
+        if (actualPosition < tracking.CityComponents.Count - 1)
         {
-            tracking.Swap(actualPosition,actualPosition+1);
+            tracking.Swap(actualPosition, actualPosition + 1);
         }
+    }
+
+    public void PreviousPage()
+    {
+        if (page != 0) page--;
+    }
+
+    public void NextPage()
+    {
+        if (page < (tracking.CityComponents.Count - 1) / 3) page++;
     }
 
     // Update is called once per frame
@@ -84,23 +98,24 @@ public class CityPanelControl : MonoBehaviour
             healthDisplay.text = "Helath: " + (tracking.Health * 100).ToString("0.00") + "%";
             foodDisplay.text = "Food: " + NumberDisplay.UnitAbbreviation(tracking.FoodQuantity) + " / " + NumberDisplay.UnitAbbreviation(tracking.FoodStorageCapacity);
             spaceDisplay.text = "Space: " + NumberDisplay.UnitAbbreviation(tracking.SpaceTaken) + " / " + NumberDisplay.UnitAbbreviation(tracking.TotalSpace);
+            woodDisplay.text = "Wood: " + NumberDisplay.UnitAbbreviation(tracking.WoodQuantity) + " / " + NumberDisplay.UnitAbbreviation(tracking.WoodStorageCapacity);
             for (int i = page * 3; i < page * 3 + 3; ++i)
             {
                 if (i >= tracking.CityComponents.Count)
                 {
-                    componentDisplays[i].text = "Empty";
+                    componentDisplays[i % 3].text = "Empty";
                 }
                 else
                 {
-                    componentDisplays[i].text = tracking.CityComponents[i].Name + " (" + NumberDisplay.UnitAbbreviation(tracking.CityComponents[i].WorkerCount)
+                    componentDisplays[i % 3].text = tracking.CityComponents[i].Name + " (" + NumberDisplay.UnitAbbreviation(tracking.CityComponents[i].WorkerCount)
                         + " / " + NumberDisplay.UnitAbbreviation(tracking.CityComponents[i].RequiredWorker) + " Worker)";
                     if (tracking.CityComponents[i].RequiredWorker > tracking.CityComponents[i].WorkerCount)
                     {
-                        componentDisplays[i].color = Color.red;
+                        componentDisplays[i % 3].color = Color.red;
                     }
                     else
                     {
-                        componentDisplays[i].color = Color.white;
+                        componentDisplays[i % 3].color = Color.white;
                     }
                 }
             }
@@ -125,6 +140,10 @@ public class CityPanelControl : MonoBehaviour
             {
                 populationDisplay.color = Color.red;
                 populationDisplay.text += " (" + NumberDisplay.UnitAbbreviation(tracking.RequiredWorker - tracking.Population) + " short)";
+            }
+            if (tracking.WoodQuantity == tracking.WoodStorageCapacity)
+            {
+                woodDisplay.color = Color.yellow;
             }
         }
     }
