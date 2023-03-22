@@ -7,7 +7,7 @@
 
 ## Preview
 
- ![The screenshot didn't load correctly.](/ReadmeResources/Preview2.png)
+ ![The screenshot didn't load correctly.](/ReadmeResources/Preview3.png)
 
 ## Structure
 
