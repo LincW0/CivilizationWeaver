@@ -19,6 +19,7 @@ public class CityPanelControl : MonoBehaviour
     {
         gameObject.SetActive(false);
         closeButton = gameObject.transform.GetChild(0).GetComponent<Button>();
+        Debug.Log(closeButton);
         closeButton.onClick.AddListener(Hide);
         tracking = null;
         nameDisplay = gameObject.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
